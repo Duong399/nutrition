@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tính Dinh Dưỡng</title>
+  <style>
+    :root {
+      --primary-color: #4CAF50;
+      --secondary-color: #2E7D32;
+      --light-color: #E8F5E9;
+      --text-color: #333;
+      --shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+      color: var(--text-color);
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      position: relative;
+    }
+    
+    header {
+      background-color: var(--primary-color);
+      color: white;
+      padding: 15px 0;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+    
+    h1, h2, h3 {
+      margin: 0;
+    }
+    
+    .main {
+      display: flex;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      gap: 20px;
+    }
+    
+    .food-input {
+      flex: 1;
+      min-width: 300px;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    
+    .nutrition-analysis {
+      flex: 2;
+      min-width: 400px;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+    
+    .input-group {
+      margin-bottom: 15px;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background-color: var(--secondary-color);
+    }
+    
+    .food-list {
+      margin-top: 20px;
+    }
+    
+    .food-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 10px;
+      border-bottom: 1px solid #eee;
+    }
+    
+    .remove-btn {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    
+    th {
+      background-color: var(--light-color);
+    }
+    
+    .total-row {
+      font-weight: bold;
+      background-color: var(--light-color);
+    }
+    
+    .chatbox {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 350px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      z-index: 1000;
+      overflow: hidden;
+    }
+    
+    .chat-header {
+      background: var(--primary-color);
+      color: white;
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .chat-body {
+      height: 300px;
+      overflow-y: auto;
+      padding: 15px;
+    }
+    
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #eee;
+      padding: 10px;
+    }
+    
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      margin-right: 10px;
+    }
+    
+    .message {
+      margin-bottom: 10px;
+      max-width: 80%;
+    }
+    
+    .user-message {
+      margin-left: auto;
+      background: var(--light-color);
+      padding: 10px;
+      border-radius: 8px 8px 0 8px;
+    }
+    
+    .ai-message {
+      background: #f1f1f1;
+      padding: 10px;
+      border-radius: 8px 8px 8px 0;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    #chat-toggle {
+      cursor: pointer;
+    }
+    
+    #analyze-btn {
+      margin-top: 20px;
+      width: 100%;
+      padding: 12px;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 20px;
+    }
+    
+    @media (max-width: 768px) {
+      .chatbox {
+        width: 90%;
+        right: 5%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Tính Dinh Dưỡng</h1>
+    </div>
+  </header>
+  
+  <div class="container">
+    <div class="main">
+      <div class="food-input">
+        <h2>Nhập Thực Phẩm</h2>
+        <div class="input-group">
+          <input type="text" id="food-name" placeholder="Nhập tên thực phẩm (ví dụ: 100g cơm trắng)">
+        </div>
+        <button id="add-food-btn">Thêm Thực Phẩm</button>
+        
+        <div class="food-list" id="food-list">
+          <!-- Danh sách thực phẩm sẽ được thêm vào đây -->
+        </div>
+        
+        <button id="analyze-btn">Phân Tích Dinh Dưỡng</button>
+      </div>
+      
+      <div class="nutrition-analysis">
+        <h2>Phân Tích Dinh Dưỡng</h2>
+        <div id="loading" class="loading hidden">Đang phân tích...</div>
+        <div id="results">
+          <table id="nutrition-table">
+            <thead>
+              <tr>
+                <th>Thực Phẩm</th>
+                <th>Calo (kcal)</th>
+                <th>Protein (g)</th>
+                <th>Chất Béo (g)</th>
+                <th>Carb (g)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Kết quả phân tích sẽ được thêm vào đây -->
+            </tbody>
+            <tfoot>
+              <tr class="total-row">
+                <td>Tổng</td>
+                <td id="total-calories">0</td>
+                <td id="total-protein">0</td>
+                <td id="total-fat">0</td>
+                <td id="total-carbs">0</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="chatbox" id="chatbox">
+    <div class="chat-header">
+      <h3>Hỏi Về Dinh Dưỡng</h3>
+      <span id="chat-toggle">−</span>
+    </div>
+    <div class="chat-body" id="chat-body">
+      <div class="message ai-message">
+        Xin chào! Tôi có thể giúp bạn trả lời các câu hỏi về dinh dưỡng. Hãy hỏi tôi về thực phẩm hoặc lời khuyên ăn uống!
+      </div>
+    </div>
+    <div class="chat-input">
+      <input type="text" id="chat-input" placeholder="Nhập câu hỏi của bạn...">
+      <button id="send-btn">Gửi</button>
+    </div>
+  </div>
+
+  <script>
+    // Dữ liệu mẫu cho việc phân tích (thay thế bằng API thực tế trong triển khai thực)
+    const foodDatabase = {
+      "Cơm trắng": { calories: 130, protein: 2.7, fat: 0.3, carbs: 28.2 },
+      // ... (các thực phẩm khác)
+    };
+
+    // Khởi tạo biến toàn cục
+    let foodItems = [];
+    let nutritionResults = [];
+    
+    // DOM Elements
+    const foodNameInput = document.getElementById('food-name');
+    const addFoodBtn = document.getElementById('add-food-btn');
+    const foodList = document.getElementById('food-list');
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const nutritionTable = document.getElementById('nutrition-table');
+    const loadingDiv = document.getElementById('loading');
+    const totalCalories = document.getElementById('total-calories');
+    const totalProtein = document.getElementById('total-protein');
+    const totalFat = document.getElementById('total-fat');
+    const totalCarbs = document.getElementById('total-carbs');
+    const chatToggle = document.getElementById('chat-toggle');
+    const chatbox = document.getElementById('chatbox');
+    const chatBody = document.getElementById('chat-body');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('send-btn');
+    
+    // Event Listeners
+    addFoodBtn.addEventListener('click', addFood);
+    analyzeBtn.addEventListener('click', analyzeNutrition);
+    chatToggle.addEventListener('click', toggleChat);
+    sendBtn.addEventListener('click', sendMessage);
+    chatInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        sendMessage();
+      }
+    });
+    
+    // Thêm thực phẩm vào danh sách
+    function addFood() {
+      const foodName = foodNameInput.value.trim();
+      
+      if (foodName === '') {
+        alert('Vui lòng nhập tên thực phẩm!');
+        return;
+      }
+      
+      const foodItem = { id: Date.now(), name: foodName };
+      foodItems.push(foodItem);
+      
+      renderFoodList();
+      foodNameInput.value = '';
+      foodNameInput.focus();
+    }
+    
+    // Hiển thị danh sách thực phẩm
+    function renderFoodList() {
+      foodList.innerHTML = '';
+      
+      foodItems.forEach(item => {
+        const foodItemElement = document.createElement('div');
+        foodItemElement.className = 'food-item';
+        foodItemElement.innerHTML = `
+          <span>${item.name}</span>
+          <button class="remove-btn" data-id="${item.id}">Xóa</button>
+        `;
+        foodList.appendChild(foodItemElement);
+      });
+      
+      // Thêm event listener cho các nút xóa
+      document.querySelectorAll('.remove-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          const id = parseInt(this.getAttribute('data-id'));
+          removeFood(id);
+        });
+      });
+    }
+    
+    // Xóa thực phẩm khỏi danh sách
+    function removeFood(id) {
+      foodItems = foodItems.filter(item => item.id !== id);
+      renderFoodList();
+    }
+    
+    // Phân tích dinh dưỡng
+    function analyzeNutrition() {
+      if (foodItems.length === 0) {
+        alert('Vui lòng thêm ít nhất một thực phẩm!');
+        return;
+      }
+      
+      loadingDiv.classList.remove('hidden');
+      
+      // Mô phỏng thời gian gọi API
+      setTimeout(() => {
+        nutritionResults = [];
+        
+        // Phân tích từng thực phẩm
+        foodItems.forEach(item => {
+          const foodName = item.name.toLowerCase();
+          let nutritionInfo = { name: item.name, calories: 0, protein: 0, fat: 0, carbs: 0 };
+          
+          // Tìm thông tin dinh dưỡng từ "database" mẫu
+          for (const key in foodDatabase) {
+            if (key.toLowerCase().includes(foodName)) { // Sửa đổi ở đây
+              nutritionInfo.calories = foodDatabase[key].calories;
+              nutritionInfo.protein = foodDatabase[key].protein;
+              nutritionInfo.fat = foodDatabase[key].fat;
+              nutritionInfo.carbs = foodDatabase[key].carbs;
+              break;
+            }
+          }
+          
+          nutritionResults.push(nutritionInfo);
+        });
+        
+        renderNutritionTable();
+        loadingDiv.classList.add('hidden');
+      }, 1500);
+    }
+    
+    // Hiển thị bảng dinh dưỡng
+    function renderNutritionTable() {
+      const tbody = nutritionTable.querySelector('tbody');
+      tbody.innerHTML = '';
+      
+      let totalCal = 0, totalProt = 0, totalFat = 0, totalCarb = 0;
+      
+      nutritionResults.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.calories}</td>
+          <td>${item.protein}</td>
+          <td>${item.fat}</td>
+          <td>${item.carbs}</td>
+        `;
+        tbody.appendChild(row);
+        
+        // Cộng dồn tổng
+        totalCal += item.calories;
+        totalProt += item.protein;
+        totalFat += item.fat;
+        totalCarb += item.carbs;
+      });
+      
+      // Cập nhật dòng tổng
+      totalCalories.textContent = totalCal.toFixed(1);
+      totalProtein.textContent = totalProt.toFixed(1);
+      totalFat.textContent = totalFat.toFixed(1);
+      totalCarbs.textContent = totalCarb.toFixed(1);
+      loadingDiv.classList.remove('hidden');
+      
+      // Mô phỏng thời gian gọi API
+      setTimeout(() => {
+        nutritionResults = [];
+        
+        // Phân tích từng thực phẩm
+        foodItems.forEach(item => {
+          const foodName = item.name.toLowerCase();
+          let nutritionInfo = { name: item.name, calories: 0, protein: 0, fat: 0, carbs: 0 };
+          
+          // Tìm thông tin dinh dưỡng từ "database" mẫu
+          for (const key in foodDatabase) {
+            if (key.toLowerCase().includes(foodName)) {
+              nutritionInfo.calories = foodDatabase[key].calories;
+              nutritionInfo.protein = foodDatabase[key].protein;
+              nutritionInfo.fat = foodDatabase[key].fat;
+              nutritionInfo.carbs = foodDatabase[key].carbs;
+              break;
+            }
+          }
+          
+          nutritionResults.push(nutritionInfo);
+        });
+        
+        renderNutritionTable();
+        loadingDiv.classList.add('hidden');
+      }, 1500);
+    }
+    
+    // Hiển thị bảng dinh dưỡng
+    function renderNutritionTable() {
+      const tbody = nutritionTable.querySelector('tbody');
+      tbody.innerHTML = '';
+      
+      let totalCal = 0, totalProt = 0, totalFat = 0, totalCarb = 0;
+      
+      nutritionResults.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${item.name}</td>
+          <td>${item.calories}</td>
+          <td>${item.protein}</td>
+          <td>${item.fat}</td>
+          <td>${item.carbs}</td>
+        `;
+        tbody.appendChild(row);
+        
+        // Cộng dồn tổng
+        totalCal += item.calories;
+        totalProt += item.protein;
+        totalFat += item.fat;
+        totalCarb += item.carbs;
+      });
+      
+      // Cập nhật dòng tổng
+      totalCalories.textContent = totalCal.toFixed(1);
+      totalProtein.textContent = totalProt.toFixed(1);
+      totalFat.textContent = totalFat.toFixed(1);
+      totalCarbs.textContent = totalCarb.toFixed(1);
+    }
+    
+    // Bật/tắt chatbox
+    function toggleChat() {
+      const chatBodyAndInput = document.querySelectorAll('.chat-body, .chat-input');
+      
+      chatBodyAndInput.forEach(el => {
+        el.classList.toggle('hidden');
+      });
+      
+      if (chatToggle.textContent === '−') {
+        chatToggle.textContent = '+';
+      } else {
+        chatToggle.textContent = '−';
+      }
+    }
+    
+    // Gửi tin nhắn chat
+    function sendMessage() {
+      const message = chatInput.value.trim();
+      
+      if (message === '') {
+        return;
+      }
+      
+      // Thêm tin nhắn người dùng vào chat
+      appendMessage(message, 'user');
+      
+      // Mô phỏng gọi API Cohere
+      setTimeout(() => {
+        const response = getAIResponse(message);
+        appendMessage(response, 'ai');
+      }, 1000);
+      
+      chatInput.value = '';
+    }
+    
+    // Thêm tin nhắn vào chatbox
+    function appendMessage(content, sender) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}-message`;
+      messageDiv.textContent = content;
+      
+      chatBody.appendChild(messageDiv);
+      chatBody.scrollTop = chatBody.scrollHeight;
+    }
+    
+    // Mô phỏng phản hồi từ API Cohere
+    function getAIResponse(message) {
+      const lowerMsg = message.toLowerCase();
+      
+      if (lowerMsg.includes('calo') || lowerMsg.includes('calorie')) {
+        return 'Calo là đơn vị đo lường năng lượng từ thực phẩm. Một người trưởng thành trung bình cần khoảng 2000-2500 calo mỗi ngày tùy thuộc vào mức độ hoạt động.';
+      } else if (lowerMsg.includes('protein')) {
+        return 'Protein rất quan trọng cho việc xây dựng cơ bắp. Nên tiêu thụ khoảng 0.8-1g protein/kg cân nặng mỗi ngày. Nguồn protein tốt bao gồm thịt, cá, trứng, đậu và các loại hạt.';
+      } else if (lowerMsg.includes('chất béo') || lowerMsg.includes('fat')) {
+        return 'Chất béo lành mạnh rất cần thiết cho cơ thể. Nên ưu tiên các loại chất béo không bão hòa từ dầu ô liu, bơ, cá béo và các loại hạt.';
+      } else if (lowerMsg.includes('carb') || lowerMsg.includes('carbohydrate')) {
+        return 'Carbohydrate là nguồn năng lượng chính cho cơ thể. Nên chọn carb phức hợp như ngũ cốc nguyên hạt, khoai lang và các loại đậu thay vì đường đơn giản.';
+      } else if (lowerMsg.includes('giảm cân') || lowerMsg.includes('diet')) {
+        return 'Để giảm cân hiệu quả, nên kết hợp chế độ ăn cân bằng với lượng calo thấp hơn nhu cầu hằng ngày và tập thể dục đều đặn. Không nên giảm quá 500-1000 calo/ngày so với mức duy trì.';
+      } else if (lowerMsg.includes('tăng cân') || lowerMsg.includes('tăng cơ')) {
+        return 'Để tăng cân khỏe mạnh, hãy tăng lượng calo tiêu thụ và tập luyện sức mạnh. Tập trung vào thực phẩm giàu dinh dưỡng và tăng protein để phát triển cơ bắp.';
+      } else {
+        return 'Thật tiếc, tôi không có thông tin cụ thể về câu hỏi này. Bạn có thể hỏi về giá trị dinh dưỡng của thực phẩm hoặc lời khuyên về chế độ ăn uống không?';
+      }
+    }
+    // Hàm tính BMR (Basal Metabolic Rate)
+    function calculateBMR(gender, weight, height, age) {
+    if (gender === 'nam') {
+        // Công thức BMR cho nam: 66.47 + (13.7 * cân nặng) + (5 * chiều cao) - (6.8 * tuổi)
+        return 66.47 + (13.7 * weight) + (5 * height) - (6.8 * age);
+    } else {
+        // Công thức BMR cho nữ: 655.1 + (9.6 * cân nặng) + (1.8 * chiều cao) - (4.7 * tuổi)
+        return 655.1 + (9.6 * weight) + (1.8 * height) - (4.7 * age);
+    }
+    }
+
+    // Hàm tính TDEE dựa trên mức độ hoạt động
+    function calculateTDEE(bmr, activityLevel) {
+    const activityMultipliers = {
+        1: 1.2,   // Không tập thể thao
+        2: 1.375, // 1-3 lần/tuần
+        3: 1.55,  // 3-5 lần/tuần
+        4: 1.725, // 6-7 lần/tuần
+        5: 1.9    // Vận động viên/ lao động rất nặng
+    };
+    
+    return bmr * activityMultipliers[activityLevel];
+    }
+
+    // Hàm tính calories cần thiết cho mục tiêu giảm cân
+    function calculateWeightLossCalories(tdee, kgPerMonth) {
+    // 1kg mỡ ~ 7700 calories
+    // Để giảm 1kg/tháng, cần giảm khoảng 7700/30 = ~257 calories/ngày
+    return tdee - (kgPerMonth * 257);
+    }
+
+    // Hàm tính calories cần thiết cho mục tiêu tăng cân
+    function calculateWeightGainCalories(tdee, kgPerMonth) {
+    // Để tăng 1kg/tháng, cần tăng khoảng 7700/30 = ~257 calories/ngày
+    return tdee + (kgPerMonth * 257);
+    }
+
+    // Thêm các biến và elements vào script hiện tại
+    document.addEventListener('DOMContentLoaded', function() {
+    // Thêm trường nhập liệu vào food-input
+    const foodInput = document.querySelector('.food-input');
+    
+    // Tạo phần tính BMR và TDEE
+    const bmrCalculator = document.createElement('div');
+    bmrCalculator.className = 'bmr-calculator';
+    bmrCalculator.innerHTML = `
+        <h3>Tính BMR & TDEE</h3>
+        <div class="input-group">
+        <label>Giới tính:</label>
+        <select id="gender">
+            <option value="nam">Nam</option>
+            <option value="nu">Nữ</option>
+        </select>
+        </div>
+        <div class="input-group">
+        <label>Cân nặng (kg):</label>
+        <input type="number" id="weight" min="30" max="200" value="60">
+        </div>
+        <div class="input-group">
+        <label>Chiều cao (cm):</label>
+        <input type="number" id="height" min="100" max="250" value="165">
+        </div>
+        <div class="input-group">
+        <label>Tuổi:</label>
+        <input type="number" id="age" min="18" max="100" value="30">
+        </div>
+        <div class="input-group">
+        <label>Mức độ hoạt động:</label>
+        <select id="activity-level">
+            <option value="1">Không tập thể thao</option>
+            <option value="2">1-3 lần/tuần</option>
+            <option value="3">3-5 lần/tuần</option>
+            <option value="4">6-7 lần/tuần</option>
+            <option value="5">Vận động viên/ lao động rất nặng</option>
+        </select>
+        </div>
+        <button id="calculate-bmr-btn">Tính BMR & TDEE</button>
+        
+        <div id="bmr-results" class="results-section hidden">
+        <h3>Kết Quả Tính Toán</h3>
+        <div class="result-item">
+            <span>BMR:</span>
+            <span id="bmr-value">0</span>
+            <span>calories/ngày</span>
+        </div>
+        <div class="result-item">
+            <span>TDEE:</span>
+            <span id="tdee-value">0</span>
+            <span>calories/ngày</span>
+        </div>
+        
+        <h3>Mục Tiêu Giảm Cân</h3>
+        <div class="input-group">
+            <label>Số kg muốn giảm mỗi tháng:</label>
+            <input type="number" id="weight-loss-kg" min="0" max="10" step="0.5" value="1">
+        </div>
+        <div class="result-item">
+            <span>Calories mỗi ngày:</span>
+            <span id="weight-loss-calories">0</span>
+            <span>calories/ngày</span>
+        </div>
+        
+        <h3>Mục Tiêu Tăng Cân</h3>
+        <div class="input-group">
+            <label>Số kg muốn tăng mỗi tháng:</label>
+            <input type="number" id="weight-gain-kg" min="0" max="10" step="0.5" value="1">
+        </div>
+        <div class="result-item">
+            <span>Calories mỗi ngày:</span>
+            <span id="weight-gain-calories">0</span>
+            <span>calories/ngày</span>
+        </div>
+        </div>
+    `;
+    
+    // Thêm vào trước danh sách thực phẩm
+    const foodList = document.getElementById('food-list');
+    foodInput.appendChild(bmrCalculator);
+
+    
+    // Thêm CSS cho phần mới
+    const style = document.createElement('style');
+    style.textContent = `
+        .bmr-calculator {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #eee;
+        }
+        
+        .bmr-calculator h3 {
+        margin-bottom: 15px;
+        color: var(--primary-color);
+        }
+        
+        .input-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+        }
+        
+        .input-group select,
+        .input-group input[type="number"] {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+        margin-bottom: 15px;
+        }
+        
+        .results-section {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: var(--light-color);
+        border-radius: 8px;
+        }
+        
+        .result-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        font-size: 16px;
+        }
+        
+        .result-item span:nth-child(2) {
+        font-weight: bold;
+        color: var(--primary-color);
+        }
+        
+        .hidden {
+        display: none;
+        }
+    `;
+    document.head.appendChild(style);
+    
+    // Thêm event listener cho nút tính BMR
+    document.getElementById('calculate-bmr-btn').addEventListener('click', function() {
+        const gender = document.getElementById('gender').value;
+        const weight = parseFloat(document.getElementById('weight').value);
+        const height = parseFloat(document.getElementById('height').value);
+        const age = parseInt(document.getElementById('age').value);
+        const activityLevel = parseInt(document.getElementById('activity-level').value);
+        
+        // Tính BMR và TDEE
+        const bmr = calculateBMR(gender, weight, height, age);
+        const tdee = calculateTDEE(bmr, activityLevel);
+        
+        // Hiển thị kết quả
+        document.getElementById('bmr-value').textContent = bmr.toFixed(0);
+        document.getElementById('tdee-value').textContent = tdee.toFixed(0);
+        
+        // Tính calories cho mục tiêu giảm cân
+        const weightLossKg = parseFloat(document.getElementById('weight-loss-kg').value);
+        const weightLossCalories = calculateWeightLossCalories(tdee, weightLossKg);
+        document.getElementById('weight-loss-calories').textContent = weightLossCalories.toFixed(0);
+        
+        // Tính calories cho mục tiêu tăng cân
+        const weightGainKg = parseFloat(document.getElementById('weight-gain-kg').value);
+        const weightGainCalories = calculateWeightGainCalories(tdee, weightGainKg);
+        document.getElementById('weight-gain-calories').textContent = weightGainCalories.toFixed(0);
+        
+        // Hiển thị kết quả
+        document.getElementById('bmr-results').classList.remove('hidden');
+    });
+    
+    // Event listeners cho việc cập nhật calories khi thay đổi mục tiêu
+    document.getElementById('weight-loss-kg').addEventListener('input', function() {
+        const tdee = parseFloat(document.getElementById('tdee-value').textContent);
+        if (!isNaN(tdee)) {
+        const weightLossKg = parseFloat(this.value);
+        const weightLossCalories = calculateWeightLossCalories(tdee, weightLossKg);
+        document.getElementById('weight-loss-calories').textContent = weightLossCalories.toFixed(0);
+        }
+    });
+    
+    document.getElementById('weight-gain-kg').addEventListener('input', function() {
+        const tdee = parseFloat(document.getElementById('tdee-value').textContent);
+        if (!isNaN(tdee)) {
+        const weightGainKg = parseFloat(this.value);
+        const weightGainCalories = calculateWeightGainCalories(tdee, weightGainKg);
+        document.getElementById('weight-gain-calories').textContent = weightGainCalories.toFixed(0);
+        }
+    });
+    
+    // Thêm thông tin phân tích vào bảng kết quả
+    const analyzeBtn = document.getElementById('analyze-btn');
+    const originalAnalyze = analyzeBtn.onclick || function(){};
+    
+    analyzeBtn.onclick = function() {
+        // Gọi hàm phân tích ban đầu
+        originalAnalyze.call(this);
+        
+        // Sau khi phân tích, thêm thông tin so sánh với mục tiêu
+        setTimeout(() => {
+        const totalCaloriesValue = parseFloat(document.getElementById('total-calories').textContent);
+        const weightLossCalories = parseFloat(document.getElementById('weight-loss-calories').textContent);
+        const weightGainCalories = parseFloat(document.getElementById('weight-gain-calories').textContent);
+        
+        if (!isNaN(totalCaloriesValue) && !isNaN(weightLossCalories) && !isNaN(weightGainCalories)) {
+            const nutritionAnalysis = document.querySelector('.nutrition-analysis');
+            
+            // Kiểm tra xem đã có phần phân tích mục tiêu chưa
+            if (!document.getElementById('goal-comparison')) {
+            const goalComparison = document.createElement('div');
+            goalComparison.id = 'goal-comparison';
+            goalComparison.className = 'goal-comparison';
+            goalComparison.innerHTML = `
+                <h3>So Sánh Với Mục Tiêu</h3>
+                <div class="comparison-item">
+                <span>Mục tiêu giảm cân:</span>
+                <span id="loss-comparison"></span>
+                </div>
+                <div class="comparison-item">
+                <span>Mục tiêu tăng cân:</span>
+                <span id="gain-comparison"></span>
+                </div>
+            `;
+            nutritionAnalysis.appendChild(goalComparison);
+            
+            // Thêm CSS cho phần mới
+            const styleComparison = document.createElement('style');
+            styleComparison.textContent = `
+                .goal-comparison {
+                margin-top: 30px;
+                padding: 15px;
+                background-color: var(--light-color);
+                border-radius: 8px;
+                }
+                
+                .goal-comparison h3 {
+                margin-bottom: 15px;
+                color: var(--primary-color);
+                }
+                
+                .comparison-item {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 10px;
+                font-size: 16px;
+                }
+                
+                .comparison-item span:nth-child(2) {
+                font-weight: bold;
+                }
+                
+                .goal-met {
+                color: green;
+                }
+                
+                .goal-not-met {
+                color: red;
+                }
+            `;
+            document.head.appendChild(styleComparison);
+            }
+            
+            // Cập nhật so sánh
+            const lossComparison = document.getElementById('loss-comparison');
+            const gainComparison = document.getElementById('gain-comparison');
+            
+            // So sánh với mục tiêu giảm cân
+            const lossCaloriesDiff = totalCaloriesValue - weightLossCalories;
+            if (lossCaloriesDiff <= 0) {
+            lossComparison.className = 'goal-met';
+            lossComparison.textContent = `Đạt (${Math.abs(lossCaloriesDiff).toFixed(0)} calories dưới mục tiêu)`;
+            } else {
+            lossComparison.className = 'goal-not-met';
+            lossComparison.textContent = `Chưa đạt (${lossCaloriesDiff.toFixed(0)} calories vượt mục tiêu)`;
+            }
+            
+            // So sánh với mục tiêu tăng cân
+            const gainCaloriesDiff = weightGainCalories - totalCaloriesValue;
+            if (gainCaloriesDiff <= 0) {
+            gainComparison.className = 'goal-met';
+            gainComparison.textContent = `Đạt (${Math.abs(gainCaloriesDiff).toFixed(0)} calories vượt mục tiêu)`;
+            } else {
+            gainComparison.className = 'goal-not-met';
+            gainComparison.textContent = `Chưa đạt (${gainCaloriesDiff.toFixed(0)} calories dưới mục tiêu)`;
+            }
+        }
+        }, 2000); // Đợi phân tích ban đầu hoàn thành
+    };
+    });
+  </script>
+</body>
