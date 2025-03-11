@@ -217,6 +217,19 @@
         right: 5%;
       }
     }
+    .food-input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .food-input-row input[type="text"] {
+      flex: 3;
+    }
+
+    .food-input-row input[type="number"] {
+      flex: 1;
+      min-width: 100px;
+    }
   </style>
 </head>
 <body>
@@ -230,8 +243,9 @@
     <div class="main">
       <div class="food-input">
         <h2>Nhập Thực Phẩm</h2>
-        <div class="input-group">
-          <input type="text" id="food-name" placeholder="Nhập tên thực phẩm (ví dụ: 100g cơm trắng)">
+        <div class="input-group food-input-row">
+          <input type="text" id="food-name" placeholder="Nhập tên thực phẩm (ví dụ: cơm trắng)">
+          <input type="number" id="food-quantity" placeholder="Khối lượng (g)" value="100" min="1">
         </div>
         <button id="add-food-btn">Thêm Thực Phẩm</button>
         
@@ -273,7 +287,6 @@
       </div>
     </div>
   </div>
-  
   <div class="chatbox" id="chatbox">
     <div class="chat-header">
       <h3>Hỏi Về Dinh Dưỡng</h3>
@@ -293,16 +306,78 @@
   <script>
     // Dữ liệu mẫu cho việc phân tích (thay thế bằng API thực tế trong triển khai thực)
     const foodDatabase = {
-      "Cơm trắng": { calories: 130, protein: 2.7, fat: 0.3, carbs: 28.2 },
-      // ... (các thực phẩm khác)
+        "Cơm trắng": { calories: 130, protein: 2.7, fat: 0.3, carbs: 28.2 },
+        
+        // 🐔 Thịt gà
+        "Ức gà không da": { calories: 165, protein: 31, fat: 3.6, carbs: 0 },
+        "Đùi gà không da": { calories: 119, protein: 23, fat: 2.6, carbs: 0 },
+        "Cánh gà không da": { calories: 203, protein: 30.5, fat: 8.1, carbs: 0 },
+        "Lườn gà có da": { calories: 197, protein: 30, fat: 7.5, carbs: 0 },
+        "Đùi gà có da": { calories: 209, protein: 27, fat: 10.2, carbs: 0 },
+        "Cánh gà có da": { calories: 290, protein: 27, fat: 19.5, carbs: 0 },
+        "Gan gà": { calories: 136, protein: 20, fat: 4.8, carbs: 1.2 },
+        
+        // 🐄 Thịt bò
+        "Thịt bò nạc": { calories: 250, protein: 26, fat: 15, carbs: 0 },
+        "Thịt bò thăn": { calories: 220, protein: 27, fat: 12, carbs: 0 },
+        "Thịt bò sườn": { calories: 290, protein: 24, fat: 21, carbs: 0 },
+        "Thịt bò bắp": { calories: 200, protein: 30, fat: 8, carbs: 0 },
+        "Gan bò": { calories: 135, protein: 20, fat: 3.6, carbs: 4 },
+        
+        // 🐖 Thịt heo
+        "Thịt heo nạc": { calories: 143, protein: 26, fat: 3.9, carbs: 0 },
+        "Thịt ba chỉ": { calories: 520, protein: 15, fat: 50, carbs: 0 },
+        "Sườn heo": { calories: 290, protein: 23, fat: 22, carbs: 0 },
+        "Gan heo": { calories: 165, protein: 25, fat: 5, carbs: 2.5 },
+        "Tim heo": { calories: 180, protein: 22, fat: 10, carbs: 0 },
+        
+        // 🐟 Hải sản
+        "Cá hồi": { calories: 206, protein: 22, fat: 13, carbs: 0 },
+        "Cá thu": { calories: 201, protein: 18, fat: 13.9, carbs: 0 },
+        "Cá ngừ": { calories: 144, protein: 32, fat: 1, carbs: 0 },
+        "Cá basa": { calories: 120, protein: 15, fat: 5, carbs: 0 },
+        "Tôm": { calories: 99, protein: 24, fat: 0.3, carbs: 0.2 },
+        "Mực": { calories: 92, protein: 15.6, fat: 1.4, carbs: 3.1 },
+        "Cua": { calories: 97, protein: 19, fat: 1.5, carbs: 1 },
+        
+        // 🥚 Trứng
+        "Trứng gà": { calories: 155, protein: 13, fat: 11, carbs: 1.1 },
+        "Trứng vịt": { calories: 185, protein: 13, fat: 14, carbs: 1 },
+        
+        // 🌿 Rau củ
+        "Cà chua": { calories: 18, protein: 0.9, fat: 0.2, carbs: 3.9 },
+        "Dưa leo": { calories: 15, protein: 0.6, fat: 0.1, carbs: 3.6 },
+        "Rau cải xanh": { calories: 26, protein: 2.6, fat: 0.3, carbs: 4.3 },
+        "Cà rốt": { calories: 41, protein: 0.9, fat: 0.2, carbs: 9.6 },
+        "Su hào": { calories: 27, protein: 1.7, fat: 0.1, carbs: 6.2 },
+        
+        // 🍎 Trái cây
+        "Táo": { calories: 52, protein: 0.3, fat: 0.2, carbs: 13.8 },
+        "Chuối": { calories: 89, protein: 1.1, fat: 0.3, carbs: 22.8 },
+        "Nho": { calories: 69, protein: 0.7, fat: 0.2, carbs: 18 },
+        "Dưa hấu": { calories: 30, protein: 0.6, fat: 0.2, carbs: 7.6 },
+        "Bơ": { calories: 160, protein: 2, fat: 15, carbs: 9 },
+        
+        // 🥜 Hạt
+        "Hạt hạnh nhân": { calories: 579, protein: 21, fat: 49, carbs: 22 },
+        "Hạt óc chó": { calories: 654, protein: 15, fat: 65, carbs: 14 },
+        "Hạt mắc ca": { calories: 718, protein: 8, fat: 76, carbs: 14 },
+        "Hạt điều": { calories: 553, protein: 18, fat: 44, carbs: 30 },
+        "Hạt dẻ cười": { calories: 562, protein: 20, fat: 45, carbs: 28 },
+        "Hạt phỉ": { calories: 628, protein: 15, fat: 61, carbs: 17 },
+        "Hạt hồ đào": { calories: 691, protein: 9, fat: 72, carbs: 14 },
+        "Hạt thông": { calories: 673, protein: 14, fat: 68, carbs: 13 }
     };
+
 
     // Khởi tạo biến toàn cục
     let foodItems = [];
     let nutritionResults = [];
     
     // DOM Elements
+    // DOM Elements
     const foodNameInput = document.getElementById('food-name');
+    const foodQuantityInput = document.getElementById('food-quantity');
     const addFoodBtn = document.getElementById('add-food-btn');
     const foodList = document.getElementById('food-list');
     const analyzeBtn = document.getElementById('analyze-btn');
@@ -332,17 +407,23 @@
     // Thêm thực phẩm vào danh sách
     function addFood() {
       const foodName = foodNameInput.value.trim();
+      const foodQuantity = parseInt(document.getElementById('food-quantity').value) || 100;
       
       if (foodName === '') {
         alert('Vui lòng nhập tên thực phẩm!');
         return;
       }
       
-      const foodItem = { id: Date.now(), name: foodName };
+      const foodItem = { 
+        id: Date.now(), 
+        name: foodName,
+        quantity: foodQuantity 
+      };
       foodItems.push(foodItem);
       
       renderFoodList();
       foodNameInput.value = '';
+      document.getElementById('food-quantity').value = '100';
       foodNameInput.focus();
     }
     
@@ -354,7 +435,7 @@
         const foodItemElement = document.createElement('div');
         foodItemElement.className = 'food-item';
         foodItemElement.innerHTML = `
-          <span>${item.name}</span>
+          <span>${item.name} (${item.quantity}g)</span>
           <button class="remove-btn" data-id="${item.id}">Xóa</button>
         `;
         foodList.appendChild(foodItemElement);
@@ -391,15 +472,22 @@
         // Phân tích từng thực phẩm
         foodItems.forEach(item => {
           const foodName = item.name.toLowerCase();
-          let nutritionInfo = { name: item.name, calories: 0, protein: 0, fat: 0, carbs: 0 };
+          const quantity = item.quantity / 100; // Chuyển đổi sang hệ số so với 100g
+          let nutritionInfo = { 
+            name: item.name + ` (${item.quantity}g)`, 
+            calories: 0, 
+            protein: 0, 
+            fat: 0, 
+            carbs: 0 
+          };
           
           // Tìm thông tin dinh dưỡng từ "database" mẫu
           for (const key in foodDatabase) {
-            if (key.toLowerCase().includes(foodName)) { // Sửa đổi ở đây
-              nutritionInfo.calories = foodDatabase[key].calories;
-              nutritionInfo.protein = foodDatabase[key].protein;
-              nutritionInfo.fat = foodDatabase[key].fat;
-              nutritionInfo.carbs = foodDatabase[key].carbs;
+            if (key.toLowerCase().includes(foodName)) {
+              nutritionInfo.calories = Math.round(foodDatabase[key].calories * quantity * 10) / 10;
+              nutritionInfo.protein = Math.round(foodDatabase[key].protein * quantity * 10) / 10;
+              nutritionInfo.fat = Math.round(foodDatabase[key].fat * quantity * 10) / 10;
+              nutritionInfo.carbs = Math.round(foodDatabase[key].carbs * quantity * 10) / 10;
               break;
             }
           }
